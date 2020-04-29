@@ -61,8 +61,6 @@ leaflet(data$data) %>%
   addTiles() %>%
   addCircleMarkers(~lon, ~lat, color = ~color)
 
-}
-
 ## Define server logic to read selected file ----
 server <- function(input, output, session) {
 
