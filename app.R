@@ -40,12 +40,6 @@ ui <- fluidPage(
   )
 )
 
-library(jsonlite)
-library(tidyverse)
-library(leaflet)
-
-data <- fromJSON("20200308130310.json")
-
 set_color <- function(x) {
     ifelse( x < 13 , "green",
     ifelse( x >= 13 & x < 35 , "yellow",
@@ -54,12 +48,6 @@ set_color <- function(x) {
     ifelse( x >= 150 & x < 250, "purple",
            "maroon")))))
 }
-
-data$data <- data$data %>% mutate(color=set_color(as.numeric(P25)))
-
-leaflet(data$data) %>%
-  addTiles() %>%
-  addCircleMarkers(~lon, ~lat, color = ~color)
 
 ## Define server logic to read selected file ----
 server <- function(input, output, session) {
