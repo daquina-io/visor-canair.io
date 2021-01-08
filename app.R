@@ -10,7 +10,7 @@ library(dygraphs)
 ui <- fluidPage(
 
   # App title ----
-  titlePanel("Visor de rutas - un/loquer"),
+  titlePanel("Visor de rutas contaminación del aire"),
 
   # Sidebar layout with input and output definitions ----
   sidebarLayout(
@@ -25,7 +25,18 @@ ui <- fluidPage(
                          ".json")),
 
       # Horizontal line ----
-      tags$hr()
+      tags$hr(),
+
+      selectInput(
+          'pollulant', 'Elija el tipo de contaminante a visualizar', choices = c("PM25","CO2") ,
+          selectize = FALSE
+      ),
+
+      sliderInput('radius', 'Tamaño del punto', 
+                  min=4, max=30,
+                  value=4),
+
+      a("visor desarrollado por un/loquer", href="https://github.com/daquina-io/visor-canair.io")
 
     ),
 
@@ -40,7 +51,16 @@ ui <- fluidPage(
   )
 )
 
-set_color <- function(x) {
+set_color_co2 <- function(x) {
+    ifelse( x < 600 , "green",
+    ifelse( x >= 600 & x < 800 , "yellow",
+    ifelse( x >= 800 & x < 1000, "orange",
+    ifelse( x >= 1000 & x < 1500, "red",
+    ifelse( x >= 1500 & x < 2000, "purple",
+           "maroon")))))
+}
+
+set_color_p25 <- function(x) {
     ifelse( x < 13 , "green",
     ifelse( x >= 13 & x < 35 , "yellow",
     ifelse( x >= 35 & x < 55, "orange",
@@ -72,12 +92,12 @@ server <- function(input, output, session) {
         }
         )
 
-        df$data <- df$data %>% mutate(color=set_color(as.numeric(P25)))
+        df$data <- df$data %>% mutate(color=ifelse(input$pollulant == "PM25", set_color_p25(as.numeric(P25)), set_color_co2(as.numeric(P25))))
         df$data$time <- as.POSIXct(df$data$timestamp, origin="1970-01-01")
 
         leaflet(df$data) %>%
             addTiles() %>%
-            addCircleMarkers(~lon, ~lat, popup = ~as.character(P25), color = ~color, layerId = ~timestamp)
+            addCircleMarkers(~lon, ~lat, popup = ~as.character(P25), color = ~color, layerId = ~timestamp, radius = ~input$radius, stroke = FALSE, fillOpacity = 0.5)
     })
 
     output$dygraph <- renderDygraph({
@@ -102,8 +122,8 @@ server <- function(input, output, session) {
 
         df$data$time <- as.POSIXct(df$data$timestamp, origin="1970-01-01")
 
-        dygraph(xts(df$data$P25, order.by=df$data$time), main = "Exposición material particulado PM2.5", ylab = "μg/m³") %>%
-            dySeries( label = "μg/m³") %>%
+        dygraph(xts(df$data$P25, order.by=df$data$time), main = sprintf("Exposición %s",input$pollulant), ylab = ifelse(input$pollulant == "PM25", "μg/m³", "ppm")) %>%
+            dySeries( label = ifelse(input$pollulant == "PM25", "μg/m³", "ppm")) %>%
             dyRangeSelector()
 
 
