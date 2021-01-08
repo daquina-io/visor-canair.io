@@ -69,6 +69,11 @@ set_color_p25 <- function(x) {
            "maroon")))))
 }
 
+set_color <- function(pollulant) {
+    if(pollulant == "PM25") return( set_color_p25 )
+    return( set_color_co2 )
+}
+
 ## Define server logic to read selected file ----
 server <- function(input, output, session) {
 
@@ -92,7 +97,7 @@ server <- function(input, output, session) {
         }
         )
 
-        df$data <- df$data %>% mutate(color=ifelse(input$pollulant == "PM25", set_color_p25(as.numeric(P25)), set_color_co2(as.numeric(P25))))
+        df$data <- df$data %>% mutate(color=set_color(input$pollulant)(as.numeric(P25)))
         df$data$time <- as.POSIXct(df$data$timestamp, origin="1970-01-01")
 
         leaflet(df$data) %>%
