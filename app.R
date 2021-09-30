@@ -5,6 +5,7 @@ library(leaflet)
 library(xts)
 library(dygraphs)
 
+options(shiny.maxRequestSize = 3 * 1024^2)
 
 # Define UI for data upload app ----
 ui <- fluidPage(
